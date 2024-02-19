@@ -3913,6 +3913,36 @@ class CollectionAPITest(TestCase):
             {'_id': 3, 'full_description': 'Title 3'},
         ], list(actual))
 
+    def test__aggregate_project_any_element_tru(self):
+        # Test cases adapted from https://www.mongodb.com/docs/manual/reference/operator/aggregation/anyElementTrue/
+        self.db.collection.insert_many([
+            { "_id" : 1, "responses" : [ True ] },
+            { "_id" : 2, "responses" : [ True, False ] },
+            { "_id" : 3, "responses" : [ ] },
+            { "_id" : 4, "responses" : [ 1, True, "seven" ] },
+            { "_id" : 5, "responses" : [ 0 ] },
+            { "_id" : 6, "responses" : [ [ ] ] },
+            { "_id" : 7, "responses" : [ [ 0 ] ] },
+            { "_id" : 8, "responses" : [ [ False ] ] },
+            { "_id" : 9, "responses" : [ None ] }
+        ])
+        actual = self.db.collection.aggregate([{
+            "$project": { 
+                "responses": 1, "isAnyTrue": { "$anyElementTrue": [ "$responses" ] } 
+            }
+        }])
+        self.assertEqual([
+            { "_id" : 1, "responses" : [ True ], "isAnyTrue" : True },
+            { "_id" : 2, "responses" : [ True, False ], "isAnyTrue" : True },
+            { "_id" : 3, "responses" : [ ], "isAnyTrue" : False },
+            { "_id" : 4, "responses" : [ 1, True, "seven" ], "isAnyTrue" : True },
+            { "_id" : 5, "responses" : [ 0 ], "isAnyTrue" : False },
+            { "_id" : 6, "responses" : [ [ ] ], "isAnyTrue" : True },
+            { "_id" : 7, "responses" : [ [ 0 ] ], "isAnyTrue" : True },
+            { "_id" : 8, "responses" : [ [ False ] ], "isAnyTrue" : True },
+            { "_id" : 9, "responses" : [ None ], "isAnyTrue" : False }
+        ], list(actual))
+
     def test__aggregate_switch(self):
         self.db.collection.insert_one({'_id': 1, 'a': 0})
         # Expressions taken directly from official documentation:

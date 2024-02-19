@@ -1049,6 +1049,14 @@ class _Parser(object):
                 if set1 != set2:
                     return False
             return True
+        if operator == '$anyElementTrue':
+            for expr_value in values:
+                for value in self.parse(expr_value):
+                    if value:
+                        return True
+                    if isinstance(value, list) and len(value) == 0:
+                        return True
+            return False
         raise NotImplementedError(
             "Although '%s' is a valid set operator for the aggregation "
             'pipeline, it is currently not implemented in Mongomock.' % operator)
